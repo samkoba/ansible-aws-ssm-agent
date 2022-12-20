@@ -1,0 +1,26 @@
+---
+- name: Install SSM Agent on Linux
+  hosts: linux
+  gather_facts: no
+  tasks:
+  - name: Check if SSM Agent is already installed
+    stat:
+      path: /etc/amazon/ssm/seelog.d/ssm-agent.cfg
+    register: ssm_agent_installed
+
+  - name: Install SSM Agent dependencies
+    package:
+      name: python3 python3-pip jq
+      state: present
+
+  - name: Download SSM Agent installer
+    get_url:
+      url: https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/debian_amd64/amazon-ssm-agent.deb
+      dest: /tmp/amazon-ssm-agent.deb
+    when: ssm_agent_installed.stat.exists == False
+
+  - name: Install SSM Agent
+    package:
+      name: /tmp/amazon-ssm-agent.deb
+      state: present
+    when: ssm_agent_installed.stat.exists == False

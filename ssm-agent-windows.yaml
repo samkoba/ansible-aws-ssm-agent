@@ -1,0 +1,21 @@
+---
+- name: Install SSM Agent on Windows
+  hosts: windows
+  gather_facts: no
+  tasks:
+  - name: Check if SSM Agent is already installed
+    win_reg_stat:
+      path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\AmazonSSMAgent
+      name: DisplayName
+    register: ssm_agent_installed
+
+  - name: Download SSM Agent installer
+    win_get_url:
+      url: https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/windows_amd64/AmazonSSMAgentSetup.exe
+      dest: C:\temp\AmazonSSMAgentSetup.exe
+
+  - name: Install SSM Agent
+    win_package:
+      path: C:\temp\AmazonSSMAgentSetup.exe
+      arguments: /qn
+    when: ssm_agent_installed.stat.exists == False
